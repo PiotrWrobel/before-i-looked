@@ -32,13 +32,22 @@ export function createApp(config: RigConfig = loadConfig()) {
     }
   });
 
-  app.get('/', (c) =>
-    c.html(
+  app.get('/', (c) => {
+    const status = readStatus(config);
+    const nights = status.nights.map((night) => {
+      const counts = { ok: 0, retry: 0, fail: 0 };
+      for (const row of readNight(config.runsDir, night).rows) {
+        counts[row.lastStatus] += 1;
+      }
+      return { night, counts };
+    });
+
+    return c.html(
       <Layout title="status" lane={lane()}>
-        <StatusBoard status={readStatus(config)} />
+        <StatusBoard status={status} nights={nights} />
       </Layout>,
-    ),
-  );
+    );
+  });
 
   app.get('/digest/:night', (c) => {
     const night = c.req.param('night');

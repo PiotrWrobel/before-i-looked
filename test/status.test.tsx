@@ -10,7 +10,26 @@ describe('status board', () => {
     const html = await res.text();
     expect(res.status).toBe(200);
     expect(html).toContain('TEST-MARKER');
-    expect(html).toContain('2026-10-28');
+    expect(html).toContain('<a href="/digest/2026-10-28">2026-10-28</a>');
+    expect(html).toContain('<a href="/digest/2026-10-27">2026-10-27</a>');
+    expect(html).toContain('<td>4</td><td>0</td><td>1</td>');
+    expect(html).toContain('<td>4</td><td>0</td><td>0</td>');
+  });
+
+  it('serves a digest page for each night on the board', async () => {
+    const app = createApp(config);
+
+    for (const night of ['2026-10-27', '2026-10-28']) {
+      const res = await app.request(`/digest/${night}`);
+      const html = await res.text();
+      expect(res.status).toBe(200);
+      expect(html).toContain(`digest · ${night}`);
+    }
+  });
+
+  it('returns 404 when a digest night is not on disk', async () => {
+    const res = await createApp(config).request('/digest/2026-10-26');
+    expect(res.status).toBe(404);
   });
 
   it('health answers with the lane id', async () => {
